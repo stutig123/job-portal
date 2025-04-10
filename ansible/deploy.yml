@@ -1,0 +1,41 @@
+---
+- name: Deploy Job Portal App
+  hosts: jobportal
+  become: true
+
+  tasks:
+    - name: Update apt
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/jobportal
+        state: directory
+
+    - name: Copy docker-compose.yml to EC2
+      copy:
+        src: ../docker-compose.yml
+        dest: /home/ubuntu/jobportal/docker-compose.yml
+
+    - name: Run Docker Compose
+      shell: docker-compose up -d
+      args:
+        chdir: /home/ubuntu/jobportal
