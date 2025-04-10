@@ -2,3 +2,11 @@ node_modules/
 .cache/
 dist/
 *.log
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+crash.log
+terraform.tfstate
+terraform.tfstate.backup
