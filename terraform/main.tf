@@ -4,32 +4,49 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-resource "aws_key_pair" "jobportal_key" {
+resource "tls_private_key" "jobportal_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "jobportal_keypair" {
   key_name   = "stuti-jobportal-key"
-  public_key = file("${path.module}/stuti-jobportal-key.pub")
+  public_key = tls_private_key.jobportal_key.public_key_openssh
+}
+
+resource "aws_security_group" "jobportal_sg" {
+  name        = "jobportal_sg"
+  description = "Allow HTTP and SSH"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_instance" "jobportal_instance" {
-  ami                         = "ami-03f4878755434977f" # Ubuntu 22.04 LTS in ap-south-1
-  instance_type               = "t2.micro"
-  key_name                    = aws_key_pair.jobportal_key.key_name
-  associate_public_ip_address = true
+  ami                    = "ami-03bb6d83c60fc5f7c" # Ubuntu 22.04 in ap-south-1
+  instance_type          = "t2.micro"
+  key_name               = aws_key_pair.jobportal_keypair.key_name
+  vpc_security_group_ids = [aws_security_group.jobportal_sg.id]
 
   tags = {
-    Name = "JobPortalApp"
-  }
-
-  provisioner "file" {
-    source      = "stuti-jobportal-key.pem"
-    destination = "/home/ubuntu/stuti-jobportal-key.pem"
-  }
-
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = file("stuti-jobportal-key.pem")
-    host        = self.public_ip
+    Name = "JobPortalEC2"
   }
 }
-
-
