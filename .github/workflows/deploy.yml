@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2 with Docker & Ansible
+    name: Deploy React Frontend to Docker Hub
     runs-on: ubuntu-latest
 
     steps:
@@ -23,26 +23,9 @@ jobs:
           username: stutigambhir
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image - Backend
+      - name: Build and push Docker image - React App
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
-          push: true
-          tags: stutigambhir/job-portal-backend:latest
-
-      - name: Build and push Docker image - Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
+          context: .
           push: true
           tags: stutigambhir/job-portal-frontend:latest
-
-      - name: Run Ansible Playbook
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ansible/deploy.yml
-          inventory: ansible/inventory.ini
-          key: ${{ secrets.STUTI_PRIVATE_KEY }}
-          options: |
-            --extra-vars "dockerhub_user=stutigambhir"
-#hello
