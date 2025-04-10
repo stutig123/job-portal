@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy React Frontend to Docker Hub
+    name: Deploy React Frontend to EC2 with Docker & Ansible
     runs-on: ubuntu-latest
 
     steps:
@@ -29,3 +29,10 @@ jobs:
           context: .
           push: true
           tags: stutigambhir/job-portal-frontend:latest
+
+      - name: Deploy to EC2 using Ansible
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible/deploy.yml
+          inventory: ansible/inventory.ini
+          key: ${{ secrets.STUTI_PRIVATE_KEY }}
