@@ -20,7 +20,7 @@ provider "aws" {
 
 # EC2 instance resource
 resource "aws_instance" "job_portal_instance" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Choose an appropriate AMI ID
+  ami           = "ami-0e35ddab05955cf57"  # New valid Ubuntu Server 24.04 LTS AMI ID
   instance_type = "t2.micro"
   key_name      = "stuti-jobportal-key"  # Ensure the key pair is created
   tags = {
