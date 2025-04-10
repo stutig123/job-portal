@@ -1,17 +1,47 @@
-- hosts: jobportal
-  become: yes
+---
+- name: Deploy Job Portal App
+  hosts: jobportal
+  become: true
+
   tasks:
-    - name: Ensure Docker is installed
+    - name: Update APT packages
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
       apt:
         name: docker.io
         state: present
-        update_cache: yes
 
-    - name: Run Job Portal frontend container
-      docker_container:
-        name: job-portal-frontend
-        image: stutigambhir/job-portal-frontend:latest
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
         state: started
-        restart_policy: always
-        ports:
-          - "80:80"
+
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/jobportal
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Copy docker-compose.yml to EC2 instance
+      copy:
+        src: ../docker-compose.yml
+        dest: /home/ubuntu/jobportal/docker-compose.yml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Run Docker Compose
+      shell: docker-compose up -d
+      args:
+        chdir: /home/ubuntu/jobportal
