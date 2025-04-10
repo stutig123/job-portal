@@ -12,5 +12,3 @@ resource "aws_instance" "job_portal_instance" {
     Name = "JobPortalInstance"
   }
 }
-
-
