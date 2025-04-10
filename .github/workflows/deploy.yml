@@ -14,6 +14,7 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: "us-east-1"
 
     steps:
       - name: Checkout code
@@ -35,11 +36,6 @@ jobs:
         working-directory: terraform
         run: |
           echo "public_ip=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
-
-      - name: Upload key to workspace
-        working-directory: terraform
-        run: |
-          cp stuti-jobportal-key.pem ${{ runner.temp }}/stuti-jobportal-key.pem
 
   docker:
     name: Build and Push Docker Image
@@ -78,12 +74,12 @@ jobs:
       - name: Create dynamic Ansible inventory
         run: |
           echo "[jobportal]" > inventory.ini
-          echo "${{ needs.terraform.outputs.public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=stuti-jobportal-key.pem" >> inventory.ini
+          echo "${{ needs.terraform.outputs.public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=/tmp/stuti-jobportal-key.pem" >> inventory.ini
 
-      - name: Copy private key
+      - name: Copy private key to temp directory
         run: |
-          echo "$PRIVATE_KEY" > stuti-jobportal-key.pem
-          chmod 600 stuti-jobportal-key.pem
+          echo "$PRIVATE_KEY" > /tmp/stuti-jobportal-key.pem
+          chmod 600 /tmp/stuti-jobportal-key.pem
         env:
           PRIVATE_KEY: ${{ secrets.STUTI_PRIVATE_KEY }}
 
@@ -92,4 +88,4 @@ jobs:
         with:
           playbook: ansible/deploy.yml
           inventory: inventory.ini
-          key: stuti-jobportal-key.pem
+          key: /tmp/stuti-jobportal-key.pem
