@@ -36,11 +36,10 @@ jobs:
         run: |
           echo "public_ip=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
 
-      - name: Save private key for Ansible
-        id: save_private_key
+      - name: Upload key to workspace
+        working-directory: terraform
         run: |
-          echo "${{ steps.apply.outputs.private_key_pem }}" > ${{ runner.temp }}/stuti-jobportal-key.pem
-          chmod 600 ${{ runner.temp }}/stuti-jobportal-key.pem
+          cp stuti-jobportal-key.pem ${{ runner.temp }}/stuti-jobportal-key.pem
 
   docker:
     name: Build and Push Docker Image
@@ -79,11 +78,18 @@ jobs:
       - name: Create dynamic Ansible inventory
         run: |
           echo "[jobportal]" > inventory.ini
-          echo "${{ needs.terraform.outputs.public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=${{ runner.temp }}/stuti-jobportal-key.pem" >> inventory.ini
+          echo "${{ needs.terraform.outputs.public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=stuti-jobportal-key.pem" >> inventory.ini
+
+      - name: Copy private key
+        run: |
+          echo "$PRIVATE_KEY" > stuti-jobportal-key.pem
+          chmod 600 stuti-jobportal-key.pem
+        env:
+          PRIVATE_KEY: ${{ secrets.STUTI_PRIVATE_KEY }}
 
       - name: Run Ansible playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: ansible/deploy.yml
           inventory: inventory.ini
-          key: ${{ runner.temp }}/stuti-jobportal-key.pem
+          key: stuti-jobportal-key.pem
