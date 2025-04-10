@@ -18,17 +18,16 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-# EC2 instance resource
 resource "aws_instance" "job_portal_instance" {
-  ami           = "ami-0429d68a1cd41ca80"  # Correct AMI ID for Ubuntu 24.04 LTS in Mumbai
-  instance_type = "t2.micro"
+  ami           = "ami-0c55b159cbfafe1f0"  # Ubuntu 20.04 LTS AMI in Mumbai (ap-south-1)
+  instance_type = "t2.micro"  # Free tier eligible
   key_name      = "stuti-jobportal-key"  # Ensure the key pair is created
   tags = {
     Name = "JobPortalInstance"
   }
 }
 
-# Output the public IP of the EC2 instance
 output "public_ip" {
   value = aws_instance.job_portal_instance.public_ip
 }
+
